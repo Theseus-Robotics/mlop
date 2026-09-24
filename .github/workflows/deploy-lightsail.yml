@@ -1,0 +1,58 @@
+name: Deploy Lightsail
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lightsail-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Validate deployment and recovery
+        run: |
+          bash -n scripts/lightsail-dispatch.sh scripts/deploy-lightsail.sh
+          python3 -m unittest discover -s tests -p test_lightsail_deploy.py -v
+
+  deploy:
+    needs: validate
+    if: github.repository == 'Theseus-Robotics/mlop' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 120
+    steps:
+      - name: Deploy the main commit and verify health
+        env:
+          DEPLOY_KEY: ${{ secrets.LIGHTSAIL_DEPLOY_KEY }}
+          KNOWN_HOSTS: ${{ vars.LIGHTSAIL_KNOWN_HOSTS }}
+          REVISION: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          key=$(mktemp)
+          hosts=$(mktemp)
+          trap 'rm -f "$key" "$hosts"' EXIT
+          printf '%s\n' "$DEPLOY_KEY" > "$key"
+          printf '%s\n' "$KNOWN_HOSTS" > "$hosts"
+          unset DEPLOY_KEY KNOWN_HOSTS
+          ssh -T -i "$key" \
+            -o BatchMode=yes \
+            -o IdentitiesOnly=yes \
+            -o StrictHostKeyChecking=yes \
+            -o UserKnownHostsFile="$hosts" \
+            -o ConnectTimeout=20 \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=10 \
+            ubuntu@18.197.48.243 "deploy $REVISION"

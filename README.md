@@ -6,6 +6,8 @@
 [![license](https://img.shields.io/github/license/mlop-ai/mlop)](https://github.com/mlop-ai/mlop/blob/main/LICENSE)
 <!-- [![build](https://img.shields.io/github/actions/workflow/status/mlop-ai/mlop/mlop.yml)](https://github.com/mlop-ai/mlop/actions/workflows/mlop.yml) -->
 
+Theseus production deployment: [Lightsail setup and recovery](docs/lightsail-deployment.md).
+
 **mlop** is a Machine Learning Operations (MLOps) framework. It provides [self-hostable superior experimental tracking capabilities and lifecycle management for training ML models](https://github.com/mlop-ai/server). To get started, [try out our introductory notebook](https://colab.research.google.com/github/mlop-ai/mlop/blob/main/examples/intro.ipynb) or [get an account with us today](https://app.mlop.ai/auth/sign-up)!
 
 ## 🎥 Demo
